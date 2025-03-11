@@ -1,106 +1,102 @@
 #include <stdint.h>
-#define BASE_ADRRES_GPIOA 0x4002000
-#define BASE_ADRRES_GPIOB 0x40020800
-#define BASE_ADRESS_RCC 0x40023000
+
+
+#define BASE_ADRESS_GPIOA 0x40020000
+#define BASE_ADRESS_GPIOB  0x40020400
+#define BASE_ADRESS_RCC 0x40023800
 
 typedef struct{
 	volatile int MODER;
 	volatile int OTYPER;
-	volatile int OSPEEDR;
+	volatile int  OSPEEDR;
 	volatile int PUPDR;
 	volatile int IDR;
 	volatile int ODR;
 	volatile int BSRR;
 	volatile int LCKR;
 	volatile int AFRL;
-}GPIO_define;
+	volatile int AFRH;
+}GPIO_TypeDef;
 
-#define GPIOA ((GPIO_define *) BASE_ADRRES_GPIOA)
-#define GPIOB ((GPIO_define *) BASE_ADRRES_GPIOB)
+#define GPIOA ((GPIO_TypeDef *) BASE_ADRESS_GPIOA)
+#define GPIOB ((GPIO_TypeDef *) BASE_ADRESS_GPIOB)
 
-typedef struct
-{
+typedef struct{
 	volatile int CR;
 	volatile int PLLCFGR;
 	volatile int CFGR;
 	volatile int CIR;
 	volatile int AHB1RSTR;
 	volatile int AHB2RSTR;
-	volatile int RESERVED0[2];
+	volatile int Reserved1[2];
 	volatile int APB1RSTR;
 	volatile int APB2RSTR;
-	volatile int RESERVED1[2];
+	volatile int Reserved2[2];
 	volatile int AHB1ENR;
 	volatile int AHB2ENR;
-	volatile int RESERVED2[2];
-	volatile int APB1ENR;
-	volatile int APB2ENR;
-}RCC_RegDef_t;
+}RCC_typeDef;
+#define RCC ((RCC_typeDef *) BASE_ADRESS_RCC)
 
-#define RCC ((RCC_RegDef_t *) BASE_ADRESS_RCC)
+
 int main(void)
 {
-      RCC->AHB1ENR |= (1<<0);
-      RCC->AHB1ENR |= (1<<1);
+ int correct[4]={1,2,3,4};
+ int usersq[4]={0};
+ int ind=0;
 
-      GPIOA ->MODER &= ~((0b00<<0)|(0b00<<(1*2))|(0b00<<(2*2))|(0b00<<(3*2)));
-      GPIOA ->PUPDR |= ((0b01<<0)|(0b01<<(1*2))|(0b01<<(2*2))|(0b01<<(3*2)));
+ RCC->AHB1ENR |= (1<<0);
+ RCC->AHB1ENR |= (1<<1);
 
-      GPIOB->MODER |= (0b01<<0);
-      GPIOB->MODER |= (0b01<<(1*2));
-      GPIOB->MODER |= (0b01<<(2*2));
+ GPIOA->MODER &=~ ((0b11<<(0*2))|(0b11<<(1*2))|(0b11<<(2*2))|(0b11<<(3*2)));
+ GPIOA->PUPDR |= ((0b01<<(0*2))|(0b01<<(1*2))|(0b01<<(2*2))|(0b01<<(3*2)));
 
-      int correct[4]={1,3,2,4};
-      int seruance[4] = {0};
-      int ind = 0;
+ GPIOB->MODER |= ((0b01<<0)|(0b01<<(1*2))|(0b01<<(2*2)));
 
-      while(1)
-      {
-    	  if(ind<4)
-    	  {
-    		  if(!((GPIOA->IDR>>0)&1)){
-    			  seruance[ind]=1;
-    			  ind++;
-    			  while(!((GPIOA->IDR>>0)&1));
-    		  }
-    		  else if(!((GPIOA->IDR>>1)&1)){
-    			  seruance[ind]=2;
-    			  ind++;
-    			  while(!((GPIOA->IDR>>1)&1));
-    		  }
-    		  else if(!((GPIOA->IDR>>2)&1)){
-    			  seruance[ind]=3;
-    		       ind++;
-    		       while(!((GPIOA->IDR>>2)&1));
-    		  }
-    		  else if(!((GPIOA->IDR>>3)&1)){
-    			  seruance[ind]=4;
-    		        ind++;
-    		       while(!((GPIOA->IDR>>3)&1));
-    		   }
-    	  }
-    	  if(ind==4){
-    		  int ismach=1;
-    		  for(int i=0;i<4;i++){
-    			  if(correct[i]!=seruance[i]){
-    				  ismach=0;
-    				  break;
-    			  }
-    		  }
-    		  if(ismach){
-    			  GPIOB->ODR|=(1<<1);
-    			  GPIOB->ODR &=~(1<<0)|(1<<2);
-    		  }
-    		  else{
-    			  GPIOB->ODR&=~(1<<1);
-    			  GPIOB->ODR |= (1<<0)|(1<<2);
-    		  }
-
-    		  ind=0;
-    	  }
-    	  if(!((GPIOA->IDR >> 5)&1)){
-    		  GPIOB->ODR &=~(1<<0)|(1<<2)|(1<<1);
-    		  ind=0;
-    	  }
-      }
+ while(1){
+	if(ind <4){
+		 if(!((GPIOA->IDR>>0)&1)){
+			 usersq[ind]=1;
+			 ind++;
+			 while(!((GPIOA->IDR>>0)&1));
+			 }
+		 else if(!((GPIOA->IDR>>1)&1)){
+			 usersq[ind]=2;
+			 ind++;
+			 while(!((GPIOA->IDR>>1)&1));
+			 }
+		 else if(!((GPIOA->IDR>>2)&1)){
+			 usersq[ind]=3;
+			 ind++;
+			 while(!((GPIOA->IDR>>2)&1));
+			 }
+		 else if(!((GPIOA->IDR>>3)&1)){
+			 usersq[ind]=4;
+			 ind++;
+			 while(!((GPIOA->IDR>>3)&1));
+			 }
+		 if(ind==4){
+			 int ismach=1;
+			 for(int i=0;i<4;i++){
+				 if(usersq[i]!=correct[i]){
+					 ismach=0;
+					 break;
+				 }
+			 }
+			 if(ismach){
+				 GPIOB->ODR |= (1<<0);
+				 GPIOB->ODR &=~ ((1<<1)|(1<<2));
+			 }
+			 else{
+				 GPIOB->ODR &=~ (1<<0);
+				GPIOB->ODR |= ((1<<1)|(1<<2));
+			 }
+			 ind=0;
+	}
+		 if(!((GPIOA->IDR>>4)&1)){
+			 GPIOB->ODR &=~ (1<<0);
+			GPIOB->ODR &=~ ((1<<1)|(1<<2));
+			ind=0;
+		 }
+	}
+ }
 }
